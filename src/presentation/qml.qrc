@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>qml/Main.qml</file>
+        <file>qml/Header.qml</file>
+        <file>qml/Footer.qml</file>
         <file>qml/AppendDialog.qml</file>
     </qresource>
 </RCC>

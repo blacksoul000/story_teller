@@ -36,7 +36,7 @@ QUuid StoryGroup::id() const
 
 QString StoryGroup::tittle() const
 {
-    return d->tittle;
+    return d->tittle.trimmed();
 }
 
 QUrl StoryGroup::preview() const

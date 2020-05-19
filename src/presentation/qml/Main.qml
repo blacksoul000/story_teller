@@ -3,29 +3,32 @@ import QtQuick.Controls 2.2
 import QtQuick.Window 2.0
 import QtQuick.Layouts 1.3
 import QtMultimedia 5.9
-
+            
 import vitaliy.bondar.storyteller 1.0
-
+        
 Item {
     id: root
     width: Screen.width
     height: Screen.height
-
-    property int itemHeight: 60
-    property int itemWidth: 60
+                
+    property int numCols: 5
+    property int itemHeight: (Screen.width - 2 * margins - (numCols - 1) * grid.columnSpacing) / numCols
+    property int itemWidth: itemHeight
     property int margins: 10
 
     property var currentStory
     property var currentSample
     property int storyPart: 0
-
+            
+    property alias controlsEnabled: footer.locked
+    
     signal appendFile(string storyUrl, string tittle, string preview)
     signal appendUrl(string storyUrl)
     signal removeStory(string uid)
-
+        
     Component {
         id: storyDelegate
-
+            
         Item {
             width: root.itemWidth
             height: root.itemHeight
@@ -33,16 +36,17 @@ Item {
             Rectangle {
                 id: itemRect
                 anchors.fill: parent
-                border.width: 2
+                border.width: 3
                 border.color: (root.currentStory == modelData) ? "green" : "red"
                 radius: 5
-                color: "gray"
+                color: "transparent"
                 Image {
-                    anchors.margins: 2
+                    anchors.margins: 3
                     anchors.fill: parent
                     source: modelData.preview
+                    fillMode: Image.PreserveAspectCrop
                 }
-
+            
                 SequentialAnimation on scale {
                     running: (root.currentStory == modelData)
                     loops: Animation.Infinite
@@ -51,10 +55,10 @@ Item {
                     onRunningChanged: if (!running) itemRect.scale = 1.0
                 }
             }
-
+        
             MouseArea {
                 anchors.fill: parent
-                onClicked: { 
+                onClicked: {
                     if (root.currentStory == modelData) {
                         root.currentStory = undefined
                     }
@@ -70,15 +74,11 @@ Item {
                 }
             }
         }
-
     }
 
-    Rectangle {
+    Header {
         id: header
-        height: 60
-        color: "lightgray"
-        border.width: 1
-        border.color: "black"
+
         anchors {
             margins: root.margins
             top: parent.top
@@ -86,59 +86,43 @@ Item {
             right: parent.right
         }
 
-        Text {
-            anchors.fill: parent
-            text: {
-                if (!root.currentStory || !root.currentSample) return ""
-                console.log(root.currentStory.tittle, root.currentSample.tittle)
-                if (root.currentStory.tittle == root.currentSample.tittle) {
-                    return root.currentSample.tittle
-                } else {
-                    return root.currentStory.tittle + "\n" + root.currentSample.tittle
-                }
-            }
-            wrapMode: Text.WordWrap
-            maximumLineCount: 3
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-
-        ToolButton {
-            anchors.right: parent.right
-            height: parent.height
-            width: height
-
-            Image {
-                anchors.fill: parent
-                source: "qrc:/icons/settings.svg"
-            }
-
-            onClicked: {
-                loader.source = "qrc:/qml/AppendDialog.qml"
-            }
-        }
+        currentStory: root.currentStory
+        currentSample: root.currentSample
+        margins: root.margins
     }
 
-    Grid {
+    Flickable {
+        id: flick
         anchors {
             margins: root.margins
             top: header.bottom
+            bottom: footer.top
             left: parent.left
+            right: parent.right
         }
 
-        columns: parent.width / (root.itemWidth + columnSpacing)
-        columnSpacing: 10
-        rowSpacing: 10
+        flickableDirection: Flickable.VerticalFlick
 
-        Repeater {
-            model: storyList.stories
-            delegate: storyDelegate
+        contentHeight: grid.height
+        contentWidth: width
+        clip: true
+
+        Grid {
+            id: grid
+            columns: root.numCols
+            columnSpacing: 10
+            rowSpacing: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            Repeater {
+                model: storyList.stories
+                delegate: storyDelegate
+            }
         }
     }
 
-    RowLayout {
+    Footer {
         id: footer
-        height: 40
 
         anchors {
             margins: root.margins
@@ -147,55 +131,39 @@ Item {
             right: parent.right
         }
 
-        ToolButton {
-            height: parent.height
-            width: 60
-            text: "<==="
-            enabled: root.storyPart > 0
-            onClicked: {
-                --root.storyPart
-                root.playSample()
-            }
+        currentStory: root.currentStory
+        currentSample: root.currentSample
+        storyPart: root.storyPart
+        margins: root.margins
+
+        position: player.position
+        duration: player.duration
+        playbackState: player.playbackState
+
+        onBackward: {
+            --root.storyPart
+            root.playSample()
         }
 
-        Item {Layout.fillWidth : true}
-
-        Text {
-            text: root.currentSample ? msecToTime(player.position) : "--:--"
+        onForward: {
+            ++root.storyPart
+            root.playSample()
         }
 
-        Item {Layout.fillWidth : true}
-
-        ToolButton {
-            height: parent.height
-            width: height
-            enabled: (root.currentSample != undefined)
-            Text {
-                anchors.centerIn: parent
-                text: player.playbackState == Audio.PlayingState ? "||" : ">"
-            }
-            onClicked: {
-                player.playbackState == Audio.PlayingState ? player.pause() : player.play()
-            }
+        onPlay: {
+            player.play()
         }
 
-        Item {Layout.fillWidth : true}
-
-        Text {
-            text: root.currentSample ? msecToTime(player.duration) : "--:--"
+        onPause: {
+            player.pause()
         }
 
-        Item {Layout.fillWidth : true}
+        onStop: {
+            root.currentStory = undefined
+        }
 
-        ToolButton {
-            height: parent.height
-            width: 60
-            enabled: (root.currentStory != undefined && root.storyPart < root.currentStory.stories.length - 1)
-            text: "===>"
-            onClicked: {
-                ++root.storyPart
-                root.playSample()
-            }
+        onAppend: {
+            loader.source = "qrc:/qml/AppendDialog.qml"
         }
     }
 
@@ -208,19 +176,19 @@ Item {
            item.rejected.connect(onRejected)
            item.open()
         }
-
+        
         function onRejected() {
             console.log("Main onRejected")
             item.close()
             source = ""
         }
-    }
-
+    }      
+        
     Audio {
         id: player
-        // muted: true  // FIXME
         autoLoad: true
         autoPlay: true
+        loops: footer.repeatMode == footer.repeatOne ? Audio.Infinite : 1
         onSourceChanged: {
             console.log("onSourceChanged")
         }
@@ -232,13 +200,22 @@ Item {
         }
         onStopped: {
             console.log("onStopped", status)
-            if (status == Audio.EndOfMedia && root.storyPart < root.currentStory.stories.length - 1) {
-                ++root.storyPart
+            if (status == Audio.EndOfMedia) {
+                if (footer.repeatMode == footer.repeatOne) {
+                    return  // see loops property
+                } else if (root.storyPart < root.currentStory.stories.length - 1) {
+                    ++root.storyPart
+                } else if (footer.repeatMode == footer.repeatRepeatAll) {
+                    root.storyPart = 0
+                } else {
+                    return
+                }
+
                 root.playSample()
             }
         }
     }
-
+            
     onCurrentStoryChanged: {
         root.storyPart = 0
         if (!root.currentStory) {
@@ -254,21 +231,5 @@ Item {
     function playSample() {
         root.currentSample = root.currentStory.stories[root.storyPart]
         player.source = root.currentSample.url
-    }
-
-    function msecToTime(msec) {
-        var sec_num = parseInt(Math.round(msec / 1000), 10);
-        var hours   = Math.floor(sec_num / 3600);
-        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
-        var seconds = sec_num - (hours * 3600) - (minutes * 60);
-
-        var out = ""
-        if (hours > 0) {
-            if (hours < 10) { out += "0"}
-            out += hours + ":";
-        }
-        if (minutes < 10) {minutes = "0" + minutes;}
-        if (seconds < 10) {seconds = "0" + seconds;}
-        return out + minutes + ':' + seconds;
     }
 }

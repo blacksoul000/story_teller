@@ -43,7 +43,7 @@ QUuid StoryObject::id() const
 
 QString StoryObject::tittle() const
 {
-    return d->tittle;
+    return d->tittle.trimmed();
 }
 
 QUrl StoryObject::preview() const
