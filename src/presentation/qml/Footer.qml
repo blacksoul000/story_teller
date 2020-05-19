@@ -27,7 +27,6 @@ RowLayout {
     property int repeatOne: 1
     property int repeatAll: 2
 
-
     signal backward()
     signal forward()
     signal play()
@@ -50,8 +49,8 @@ RowLayout {
     Item {Layout.fillWidth : true}
 
     ToolButton {
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: root.storyPart > 0
         visible: !root.locked
         Image {
@@ -62,8 +61,8 @@ RowLayout {
     }
 
     ToolButton {
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: root.locked
         visible: root.locked
         Image {
@@ -76,8 +75,8 @@ RowLayout {
     Item {Layout.fillWidth : true}
 
     ToolButton {
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: (root.currentSample != undefined)
         visible: !root.locked
         Image {
@@ -91,8 +90,8 @@ RowLayout {
 
     ToolButton {
         id: repeat
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: root.locked
         visible: root.locked
 
@@ -122,8 +121,8 @@ RowLayout {
     Item {Layout.fillWidth : true}
 
     ToolButton {
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: (root.currentStory != undefined && root.storyPart < root.currentStory.stories.length - 1)
         visible: !root.locked
         Image {
@@ -135,8 +134,8 @@ RowLayout {
 
     ToolButton {
         id: timerBtn
-        height: parent.height
-        width: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         enabled: root.locked
         visible: root.locked
         property int timeoutMin: 0
@@ -171,8 +170,8 @@ RowLayout {
 
     DelayButton {
         id: lock
-        height: footer.height
-        implicitWidth: height
+        implicitHeight: footer.height
+        implicitWidth: implicitHeight
         delay: 1000
         Image {
             anchors.fill: parent
