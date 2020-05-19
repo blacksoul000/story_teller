@@ -31,7 +31,6 @@ DetiOnlineHandler::~DetiOnlineHandler()
 
 void DetiOnlineHandler::httpReadyRead()
 {
-    qDebug() << Q_FUNC_INFO;
     QString buff = m_reply->readAll();
     d->parseMedia(buff);
     d->parseTittle(buff);
@@ -56,7 +55,7 @@ QString DetiOnlineHandler::tittle() const
 void DetiOnlineHandler::Impl::parseMedia(const QString& buffer)
 {
     QRegExp regexp("window\\.pl\\.push\\(\\{duration:'([0-9:]+)',file:'(https:\\/\\/stat3\\.deti-online\\.com[a-zA-Z0-9\\/\\-_]+\\.mp3)'"
-        ",title:'([А-ЯЁа-яё0-9:,\\/\\.\\s\\-_\\(\\)\\?\\!]+)'");
+        ",title:'([А-ЯЁа-яё0-9:;,\\/\\.\\s\\-—_\\(\\)\\?\\!]+)'");
     regexp.setMinimal(true);
     int lastPos = 0;
     while ((lastPos = regexp.indexIn(buffer, lastPos)) != -1) 
@@ -69,7 +68,7 @@ void DetiOnlineHandler::Impl::parseMedia(const QString& buffer)
 void DetiOnlineHandler::Impl::parseTittle(const QString& buffer)
 {
     QRegExp regexp("<head><title>(Аудио\\s?сказки|Аудио\\s?сказка|Аудио\\s?книга)?\\s?([А-ЯЁа-яё\\s-,]+)\\.? [сС]лушать");
-    
+
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
