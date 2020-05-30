@@ -13,6 +13,7 @@ struct OzornikHandler::Impl
     QList< domain::MetaInfo > media;
     QUrl preview;
     QString tittle;
+    QString buffer;
 
     void parseMedia(const QString& buffer);
     void parseTittle(const QString& buffer);
@@ -32,10 +33,10 @@ OzornikHandler::~OzornikHandler()
 
 void OzornikHandler::httpReadyRead()
 {
-    QString buff = m_reply->readAll();
-    d->parseMedia(buff);
-    d->parseTittle(buff);
-    d->parsePreview(buff);
+    d->buffer.append(m_reply->readAll());
+    d->parseMedia(d->buffer);
+    d->parseTittle(d->buffer);
+    d->parsePreview(d->buffer);
 }
 
 QList< domain::MetaInfo > OzornikHandler::media() const
@@ -55,11 +56,13 @@ QString OzornikHandler::tittle() const
 
 void OzornikHandler::Impl::parseMedia(const QString& buffer)
 {
+    media.clear();
+
     QRegExp regexp("data-audiourl=\"(https:\\/\\/ozornik\\.net\\/wp-content\\/uploads\\/"
-        "[a-zA-Z0-9\\/\\-_]+\\.mp3)\" data-artist=\"\">\\s((&#[0-9]+;\\s?)+[0-9a-zA-Z:;\\s\\-—_,\\(\\)\\?\\!«»]*)\\s<span");
+        "[a-zA-Z0-9\\/\\-_]+\\.mp3)\" data-artist=\"\">\\s([0-9a-zA-Z:;\\s\\-—_,\\(\\)\\?\\!\\.&#«»]*)\\s<span");
     // regexp.setMinimal(true);
-    int lastPos = 0;
     QTextDocument text;
+    int lastPos = 0;
     while ((lastPos = regexp.indexIn(buffer, lastPos)) != -1) 
     {
         lastPos += regexp.matchedLength();

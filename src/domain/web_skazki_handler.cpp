@@ -12,6 +12,7 @@ struct WebSkazkiHandler::Impl
     QList< domain::MetaInfo > media;
     QUrl preview;
     QString tittle;
+    QString buffer;
 
     void parseMedia(const QString& buffer);
     void parseTittle(const QString& buffer);
@@ -31,10 +32,10 @@ WebSkazkiHandler::~WebSkazkiHandler()
 
 void WebSkazkiHandler::httpReadyRead()
 {
-    QString buff = m_reply->readAll();
-    d->parseMedia(buff);
-    d->parseTittle(buff);
-    d->parsePreview(buff);
+    d->buffer.append(m_reply->readAll());
+    d->parseMedia(d->buffer);
+    d->parseTittle(d->buffer);
+    d->parsePreview(d->buffer);
 }
 
 QList< domain::MetaInfo > WebSkazkiHandler::media() const
@@ -54,6 +55,8 @@ QString WebSkazkiHandler::tittle() const
 
 void WebSkazkiHandler::Impl::parseMedia(const QString& buffer)
 {
+    media.clear();
+
     QRegExp regexp("\\{ name: '([А-ЯЁа-яё0-9:,\\/\\.\\s\\-–_\\(\\)\?!]+)', "
         "artist: '[а-яёА-Яёa-zA-Z\\s\\-–]+', url: '([a-zA-Z0-9\\/\\-_]+\\.mp3)' \\}");
     regexp.setMinimal(true);

@@ -12,6 +12,7 @@ struct DetiOnlineHandler::Impl
     QList< domain::MetaInfo > media;
     QUrl preview;
     QString tittle;
+    QString buffer;
 
     void parseMedia(const QString& buffer);
     void parseTittle(const QString& buffer);
@@ -31,10 +32,10 @@ DetiOnlineHandler::~DetiOnlineHandler()
 
 void DetiOnlineHandler::httpReadyRead()
 {
-    QString buff = m_reply->readAll();
-    d->parseMedia(buff);
-    d->parseTittle(buff);
-    d->parsePreview(buff);
+    d->buffer.append(m_reply->readAll());
+    d->parseMedia(d->buffer);
+    d->parseTittle(d->buffer);
+    d->parsePreview(d->buffer);
 }
 
 QList< domain::MetaInfo > DetiOnlineHandler::media() const
@@ -54,6 +55,8 @@ QString DetiOnlineHandler::tittle() const
 
 void DetiOnlineHandler::Impl::parseMedia(const QString& buffer)
 {
+    media.clear();
+
     QRegExp regexp("window\\.pl\\.push\\(\\{duration:'([0-9:]+)',file:'(https:\\/\\/stat3\\.deti-online\\.com[a-zA-Z0-9\\/\\-_]+\\.mp3)'"
         ",title:'([А-ЯЁа-яё0-9a-zA-Z:;,\\/\\.\\s\\-—_\\(\\)\\?\\!«»]+)'");
     regexp.setMinimal(true);
