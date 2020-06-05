@@ -1,61 +1,14 @@
 #include "domain/deti_online_handler.hpp"
 
-#include <QtNetwork>
 #include <QRegExp>
 
 
 using domain::DetiOnlineHandler;
 
 
-struct DetiOnlineHandler::Impl
+QList< domain::MetaInfo > DetiOnlineHandler::parseMedia(const QString& buffer) const
 {
     QList< domain::MetaInfo > media;
-    QUrl preview;
-    QString tittle;
-    QString buffer;
-
-    void parseMedia(const QString& buffer);
-    void parseTittle(const QString& buffer);
-    void parsePreview(const QString& buffer);
-};
-
-
-DetiOnlineHandler::DetiOnlineHandler(QObject* parent): 
-    domain::AbstractPageHandler(parent),
-    d(new Impl)
-{}
-
-DetiOnlineHandler::~DetiOnlineHandler()
-{
-    delete d;
-}
-
-void DetiOnlineHandler::httpReadyRead()
-{
-    d->buffer.append(m_reply->readAll());
-    d->parseMedia(d->buffer);
-    d->parseTittle(d->buffer);
-    d->parsePreview(d->buffer);
-}
-
-QList< domain::MetaInfo > DetiOnlineHandler::media() const
-{
-    return d->media;
-}
-
-QUrl DetiOnlineHandler::preview() const
-{
-    return d->preview;
-}
-
-QString DetiOnlineHandler::tittle() const 
-{
-    return d->tittle;
-}
-
-void DetiOnlineHandler::Impl::parseMedia(const QString& buffer)
-{
-    media.clear();
 
     QRegExp regexp("window\\.pl\\.push\\(\\{duration:'([0-9:]+)',file:'(https:\\/\\/stat3\\.deti-online\\.com[a-zA-Z0-9\\/\\-_]+\\.mp3)'"
         ",title:'([А-ЯЁа-яё0-9a-zA-Z:;,\\/\\.\\s\\-—_\\(\\)\\?\\!«»]+)'");
@@ -66,9 +19,10 @@ void DetiOnlineHandler::Impl::parseMedia(const QString& buffer)
         lastPos += regexp.matchedLength();
         media.append({regexp.cap(3), QUrl(regexp.cap(2)), 0.0, QUrl()});
     }
+    return media;
 }
 
-void DetiOnlineHandler::Impl::parseTittle(const QString& buffer)
+QString DetiOnlineHandler::parseTittle(const QString& buffer) const
 {
     QRegExp regexp("<head><title>(Аудио\\s?сказки|Аудио\\s?сказка|Аудио\\s?книга)?\\s?"
         "([А-ЯЁа-яё0-9a-zA-Z:;\\s\\-—_,\\(\\)\\?\\!«»]+)\\.?\\s?\\|?\\s?([сС]лушать)?");
@@ -76,16 +30,16 @@ void DetiOnlineHandler::Impl::parseTittle(const QString& buffer)
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
-        tittle = regexp.cap(2);
+        return regexp.cap(2);
     }
 }
 
-void DetiOnlineHandler::Impl::parsePreview(const QString& buffer)
+QUrl DetiOnlineHandler::parsePreview(const QString& buffer) const
 {
     QRegExp regexp("srcset=\"([a-zA-Z0-9\\/-]+\\.jpg)\\s2x\"");
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
-        preview = QUrl::fromUserInput("https://deti-online.com" + regexp.cap(1));
+        return QUrl::fromUserInput("https://deti-online.com" + regexp.cap(1));
     }
 }

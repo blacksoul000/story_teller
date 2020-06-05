@@ -1,61 +1,14 @@
 #include "domain/web_skazki_handler.hpp"
 
-#include <QtNetwork>
 #include <QRegExp>
 
 
 using domain::WebSkazkiHandler;
 
 
-struct WebSkazkiHandler::Impl
+QList< domain::MetaInfo > WebSkazkiHandler::parseMedia(const QString& buffer) const
 {
     QList< domain::MetaInfo > media;
-    QUrl preview;
-    QString tittle;
-    QString buffer;
-
-    void parseMedia(const QString& buffer);
-    void parseTittle(const QString& buffer);
-    void parsePreview(const QString& buffer);
-};
-
-
-WebSkazkiHandler::WebSkazkiHandler(QObject* parent): 
-    domain::AbstractPageHandler(parent),
-    d(new Impl)
-{}
-
-WebSkazkiHandler::~WebSkazkiHandler()
-{
-    delete d;
-}
-
-void WebSkazkiHandler::httpReadyRead()
-{
-    d->buffer.append(m_reply->readAll());
-    d->parseMedia(d->buffer);
-    d->parseTittle(d->buffer);
-    d->parsePreview(d->buffer);
-}
-
-QList< domain::MetaInfo > WebSkazkiHandler::media() const
-{
-    return d->media;
-}
-
-QUrl WebSkazkiHandler::preview() const
-{
-    return d->preview;
-}
-
-QString WebSkazkiHandler::tittle() const 
-{
-    return d->tittle;
-}
-
-void WebSkazkiHandler::Impl::parseMedia(const QString& buffer)
-{
-    media.clear();
 
     QRegExp regexp("\\{ name: '([А-ЯЁа-яё0-9:,\\/\\.\\s\\-–_\\(\\)\?!]+)', "
         "artist: '[а-яёА-Яёa-zA-Z\\s\\-–]+', url: '([a-zA-Z0-9\\/\\-_]+\\.mp3)' \\}");
@@ -69,25 +22,26 @@ void WebSkazkiHandler::Impl::parseMedia(const QString& buffer)
                       0.0, 
                       QUrl()});
     }
+    return media;
 }
 
-void WebSkazkiHandler::Impl::parseTittle(const QString& buffer)
+QString WebSkazkiHandler::parseTittle(const QString& buffer) const
 {
     QRegExp regexp("<title>(Аудио\\s?сказк[иа]|Аудио\\s?книга)\\s«([А-ЯЁа-яё\\s-,]+)» слушать онлайн<\\/title>");
     
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
-        tittle = regexp.cap(2);
+        return regexp.cap(2);
     }
 }
 
-void WebSkazkiHandler::Impl::parsePreview(const QString& buffer)
+QUrl WebSkazkiHandler::parsePreview(const QString& buffer) const
 {
     QRegExp regexp("src=\"(https:\\/\\/web-skazki\\.ru\\/preview-files\\/[a-zA-Z0-9\\\\/-]+\\-x\\-[0-9]+\\.(jpe?g|png))\"");
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
-        preview = regexp.cap(1);
+        return regexp.cap(1);
     }
 }

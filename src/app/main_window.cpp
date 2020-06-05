@@ -1,12 +1,12 @@
 #include "app/main_window.hpp"
 
 //internal
+#include "domain/page_loader.hpp"
 #include "domain/deti_online_handler.hpp"
 #include "domain/story_group.hpp"
 #include "domain/story_object.hpp"
 #include "domain/story_list.hpp"
 #include "domain/story_database.hpp"
-#include "domain/page_handler_factory.hpp"
 
 //Qt
 #include <QCoreApplication>
@@ -27,7 +27,7 @@
 
 
 using app::MainWindow;
-using domain::AbstractPageHandler;
+using domain::PageLoader;
 
 
 namespace
@@ -38,7 +38,7 @@ namespace
 struct MainWindow::Impl
 {
     QQuickView* viewer = nullptr;
-    AbstractPageHandler* pageHandler = nullptr;
+    PageLoader* pageLoader = nullptr;
     domain::StoryList* storyList = nullptr;
     domain::StoryDatabase* db = nullptr;
 
@@ -122,16 +122,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::onPageLoaded()
 {
-    domain::StoryGroup* group = new domain::StoryGroup(d->pageHandler->tittle(), d->pageHandler->preview());
+    domain::StoryGroup* group = new domain::StoryGroup(d->pageLoader->tittle(), d->pageLoader->preview());
 
-    for (const auto& media: d->pageHandler->media())
+    for (const auto& media: d->pageLoader->media())
     {
         group->addStory(new domain::StoryObject(media));
     }
     if (!d->db->addStoryGroup(group)) return;
     d->storyList->addStoryGroup(group);
-    delete d->pageHandler;
-    d->pageHandler = nullptr;
+    delete d->pageLoader;
+    d->pageLoader = nullptr;
 }
 
 void MainWindow::onAppendFile(const QString& url, const QString& tittle, const QString& preview)
@@ -154,7 +154,7 @@ void MainWindow::onAppendFile(const QString& url, const QString& tittle, const Q
 void MainWindow::onAppendUrl(const QString& url)
 {
     qDebug() << Q_FUNC_INFO << url;
-    if (d->pageHandler)
+    if (d->pageLoader)
     {
         qDebug() << "Busy";
         return;
@@ -162,15 +162,16 @@ void MainWindow::onAppendUrl(const QString& url)
 
     QUrl storyUrl = QUrl::fromUserInput(url);
     qDebug() << Q_FUNC_INFO << storyUrl;
-    d->pageHandler = domain::PageHandlerFactory::create(storyUrl, this);
-    if (!d->pageHandler)
+    d->pageLoader = new PageLoader(this);
+    d->pageLoader->startRequest(storyUrl);
+    if (!d->pageLoader)
     {
         // TODO - show error
         qDebug() << "Failed to parse url";
         return;
     }
-    connect(d->pageHandler, &AbstractPageHandler::finished, this, &MainWindow::onPageLoaded);
-    d->pageHandler->startRequest(storyUrl);
+    connect(d->pageLoader, &PageLoader::finished, this, &MainWindow::onPageLoaded);
+    d->pageLoader->startRequest(storyUrl);
 }
 
 void MainWindow::onRemoveStory(const QString& id)

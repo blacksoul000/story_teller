@@ -3,17 +3,18 @@
 
 
 #include <QUrl>
+#include <QSharedPointer>
 
 
 namespace domain
 {
-    class AbstractPageHandler;
+    class IPageHandler;
     class PageHandlerFactory
     {
     public:
         virtual ~PageHandlerFactory() = default;
 
-        static AbstractPageHandler* create(const QUrl& url, QObject* parent = nullptr);
+        static QSharedPointer< IPageHandler > create(const QUrl& url);
 
     private:
         PageHandlerFactory() = delete;

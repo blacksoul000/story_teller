@@ -2,30 +2,18 @@
 #define DETI_ONLINE_HANDLER_HPP
 
 
-#include "domain/abstract_page_handler.hpp"
+#include "domain/i_page_handler.hpp"
 
 
 namespace domain
 {
-    class DetiOnlineHandler : public AbstractPageHandler
+    class DetiOnlineHandler : public IPageHandler
     {
-        Q_OBJECT
     public:
-        DetiOnlineHandler(QObject* parent = nullptr);
-        virtual ~DetiOnlineHandler();
-
-        QList< MetaInfo > media() const override;
-        QUrl preview() const override;
-        QString tittle() const  override;
-
-    protected slots:
-        void httpReadyRead() override;
-
-    private:
-        struct Impl;
-        Impl* d;
+        QList< MetaInfo > parseMedia(const QString& buffer) const override;
+        QUrl parsePreview(const QString& buffer) const override;
+        QString parseTittle(const QString& buffer) const override;
     };
-    
 }  // namespace domain
 
 #endif  // DETI_ONLINE_HANDLER_HPP

@@ -1,8 +1,8 @@
-#ifndef ABSTRACT_PAGE_HANDLER_HPP
-#define ABSTRACT_PAGE_HANDLER_HPP
-
+#ifndef PAGE_LOADER_HPP
+#define PAGE_LOADER_HPP
 
 #include "domain/meta_info.hpp"
+#include "domain/i_page_handler.hpp"
 
 #include <QNetworkAccessManager>
 #include <QUrl>
@@ -10,17 +10,17 @@
 
 namespace domain
 {
-    class AbstractPageHandler : public QObject
+    class PageLoader : public QObject
     {
         Q_OBJECT
     public:
-        AbstractPageHandler(QObject* parent = nullptr);
-        virtual ~AbstractPageHandler(){}
+        PageLoader(QObject* parent = nullptr);
+        virtual ~PageLoader(){}
         void startRequest(const QUrl& url);
 
-        virtual QList< MetaInfo > media() const = 0;
-        virtual QUrl preview() const = 0;
-        virtual QString tittle() const = 0;
+        virtual QList< MetaInfo > media() const;
+        virtual QUrl preview() const;
+        virtual QString tittle() const;
 
     public slots:
         void cancel();
@@ -36,11 +36,13 @@ namespace domain
         void httpFinished();
 
     protected:
+        QString m_buffer;
         QUrl m_url;
         QNetworkAccessManager m_qnam;
         QNetworkReply* m_reply = nullptr;
         bool m_httpRequestAborted = false;
+        QSharedPointer< domain::IPageHandler > m_handler;
     };
 }  // namespace domain
 
-#endif  // ABSTRACT_PAGE_HANDLER_HPP
+#endif  // PAGE_LOADER_HPP

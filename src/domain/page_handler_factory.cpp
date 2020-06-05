@@ -8,13 +8,15 @@
 using namespace domain;
 
 
-AbstractPageHandler* PageHandlerFactory::create(const QUrl& url, QObject* parent)
+QSharedPointer< IPageHandler > PageHandlerFactory::create(const QUrl& url)
 {
     if (!url.isValid()) return nullptr;
 
+    using PageHandlerPtr = QSharedPointer< IPageHandler >;
+
     const QString host = url.host();
-    if (host == "deti-online.com") return new domain::DetiOnlineHandler(parent);
-    if (host == "web-skazki.ru") return new domain::WebSkazkiHandler(parent);
-    if (host == "ozornik.net") return new domain::OzornikHandler(parent);
+    if (host == "deti-online.com") return PageHandlerPtr(new domain::DetiOnlineHandler());
+    if (host == "web-skazki.ru") return PageHandlerPtr(new domain::WebSkazkiHandler());
+    if (host == "ozornik.net") return PageHandlerPtr(new domain::OzornikHandler());
     return nullptr;
 }

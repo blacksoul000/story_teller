@@ -1,20 +1,21 @@
-#include "domain/abstract_page_handler.hpp"
+#include "domain/page_loader.hpp"
+#include "domain/page_handler_factory.hpp"
 
 #include <QtNetwork>
 
 
-using domain::AbstractPageHandler;
+using domain::PageLoader;
 
 
-AbstractPageHandler::AbstractPageHandler(QObject* parent): 
+PageLoader::PageLoader(QObject* parent): 
     QObject(parent)
 {
     qDebug() << Q_FUNC_INFO;
     connect(&m_qnam, &QNetworkAccessManager::authenticationRequired,
-            this, &AbstractPageHandler::slotAuthenticationRequired);
+            this, &PageLoader::slotAuthenticationRequired);
 }
 
-void AbstractPageHandler::startRequest(const QUrl& url)
+void PageLoader::startRequest(const QUrl& url)
 {
     qDebug() << Q_FUNC_INFO;
     if (m_reply) 
@@ -29,22 +30,23 @@ void AbstractPageHandler::startRequest(const QUrl& url)
     }
     m_url = url;
     m_httpRequestAborted = false;
+    m_handler = domain::PageHandlerFactory::create(m_url);
 
     m_reply = m_qnam.get(QNetworkRequest(url));
     m_reply->ignoreSslErrors();
-    connect(m_reply, &QNetworkReply::finished, this, &AbstractPageHandler::httpFinished);
-    connect(m_reply, &QNetworkReply::finished, this, &AbstractPageHandler::finished);
-    connect(m_reply, &QIODevice::readyRead, this, &AbstractPageHandler::httpReadyRead);
+    connect(m_reply, &QNetworkReply::finished, this, &PageLoader::httpFinished);
+    connect(m_reply, &QNetworkReply::finished, this, &PageLoader::finished);
+    connect(m_reply, &QIODevice::readyRead, this, &PageLoader::httpReadyRead);
 }
 
-void AbstractPageHandler::cancel()
+void PageLoader::cancel()
 {
     qDebug() << Q_FUNC_INFO;
     m_httpRequestAborted = true;
     m_reply->abort();
 }
 
-void AbstractPageHandler::httpFinished()
+void PageLoader::httpFinished()
 {
     qDebug() << Q_FUNC_INFO;
     if (m_httpRequestAborted) 
@@ -73,8 +75,26 @@ void AbstractPageHandler::httpFinished()
     }
 }
 
-void AbstractPageHandler::httpReadyRead()
-{}
+void PageLoader::httpReadyRead()
+{
+    m_buffer.append(m_reply->readAll());
+}
 
-void AbstractPageHandler::slotAuthenticationRequired(QNetworkReply* ,QAuthenticator*)
+QList< domain::MetaInfo > PageLoader::media() const
+{
+    return m_handler ? m_handler->parseMedia(m_buffer) : QList< MetaInfo >();
+}
+
+QUrl PageLoader::preview() const
+{
+    return m_handler ? m_handler->parsePreview(m_buffer) : QUrl();
+}
+
+QString PageLoader::tittle() const
+{
+    return m_handler ? m_handler->parseTittle(m_buffer) : QString();
+}
+
+
+void PageLoader::slotAuthenticationRequired(QNetworkReply* ,QAuthenticator*)
 {}
