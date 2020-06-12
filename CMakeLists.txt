@@ -14,7 +14,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Qml Quick Svg Multimedia Network S
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src src/*.cpp src/*.qrc include/*.hpp)
+file(GLOB_RECURSE SOURCES ${CMAKE_SOURCE_DIR}/src src/app/*.cpp src/domain/*.cpp src/presentation/*.cpp src/*.qrc include/*.hpp)
 
 if(ANDROID)
     find_package(Qt5AndroidExtras)
@@ -29,7 +29,13 @@ if(ANDROID)
     target_link_libraries(${PROJECT_NAME} Qt5::AndroidExtras android log)
 
 else(ANDROID)
-    add_executable(${PROJECT_NAME} "")
+    add_library(${PROJECT_NAME} SHARED "")
+
+    # Executable target
+    add_executable(${PROJECT_NAME}-bin src/main.cpp)
+    set_target_properties(${PROJECT_NAME}-bin PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+    target_include_directories(${PROJECT_NAME}-bin PUBLIC include)
+    target_link_libraries(${PROJECT_NAME}-bin ${PROJECT_NAME})
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
@@ -52,4 +58,6 @@ if(ANDROID)
                         BUILDTOOLS_REVISION "28.0.3"
                         DEPENDS ${ANDROID_EXTRA_LIBS}
 )
+else(ANDROID)
+    add_subdirectory(tests)
 endif()

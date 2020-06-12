@@ -122,13 +122,15 @@ MainWindow::~MainWindow()
 
 void MainWindow::onPageLoaded()
 {
-    domain::StoryGroup* group = new domain::StoryGroup(d->pageLoader->tittle(), d->pageLoader->preview());
+    domain::StoryGroup* group = new domain::StoryGroup(d->db, d->pageLoader->tittle(), d->pageLoader->preview());
 
     for (const auto& media: d->pageLoader->media())
     {
-        group->addStory(new domain::StoryObject(media));
+        group->addStory(new domain::StoryObject(d->db, media));
     }
+
     if (!d->db->addStoryGroup(group)) return;
+
     d->storyList->addStoryGroup(group);
     delete d->pageLoader;
     d->pageLoader = nullptr;
@@ -146,8 +148,10 @@ void MainWindow::onAppendFile(const QString& url, const QString& tittle, const Q
     QUrl storyUrl = QUrl::fromLocalFile(url);
     QUrl storyPreview = QUrl::fromLocalFile(preview);
 
-    domain::StoryGroup* group = new domain::StoryGroup(tittle, storyPreview);
-    group->addStory(new domain::StoryObject(tittle, storyUrl, 0.0));  // TODO - duration
+    domain::StoryGroup* group = new domain::StoryGroup(d->db, tittle, storyPreview);
+    if (!d->db->addStoryGroup(group)) return;
+
+    group->addStory(new domain::StoryObject(d->db, tittle, storyUrl, 0.0));
     d->storyList->addStoryGroup(group);
 }
 

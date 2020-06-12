@@ -1,6 +1,7 @@
 #include "domain/deti_online_handler.hpp"
 
 #include <QRegExp>
+#include <QDebug>
 
 
 using domain::DetiOnlineHandler;
@@ -24,13 +25,16 @@ QList< domain::MetaInfo > DetiOnlineHandler::parseMedia(const QString& buffer) c
 
 QString DetiOnlineHandler::parseTittle(const QString& buffer) const
 {
-    QRegExp regexp("<head><title>(Аудио\\s?сказки|Аудио\\s?сказка|Аудио\\s?книга)?\\s?"
-        "([А-ЯЁа-яё0-9a-zA-Z:;\\s\\-—_,\\(\\)\\?\\!«»]+)\\.?\\s?\\|?\\s?([сС]лушать)?");
+    QRegExp regexp("<head><title>(Аудио\\s?(сказк[иа]|книга)\\s)?(.+)</title>");
 
     regexp.setMinimal(true);
     if (regexp.indexIn(buffer) != -1)
     {
-        return regexp.cap(2);
+        QString tittle = regexp.cap(3);
+        int pos = tittle.indexOf(QRegExp("([Сс]лушать|\\.|\\|)"), 0);
+        if (pos != -1) tittle.resize(pos);
+        qDebug() << tittle;
+        return tittle.trimmed();
     }
 }
 

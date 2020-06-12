@@ -20,14 +20,14 @@ Item {
     property var currentSample
     property int storyPart: 0
             
-    property alias controlsEnabled: footer.locked
+    property bool controlsEnabled: footer.locked
     
     signal appendFile(string storyUrl, string tittle, string preview)
     signal appendUrl(string storyUrl)
     signal removeStory(string uid)
         
     Component {
-        id: storyDelegate
+        id: storyGroupDelegate
             
         Item {
             width: root.itemWidth
@@ -66,11 +66,10 @@ Item {
                         root.currentStory = modelData
                     }
                 }
-                onDoubleClicked: {
-                    if (root.currentStory == modelData) {
-                        player.stop()
-                    }
-                    root.removeStory(modelData.id)
+                onPressAndHold: {
+                    if (!controlsEnabled) return;
+                    modifyLoader.story = modelData
+                    modifyLoader.source = "qrc:/qml/ModifyDialog.qml"
                 }
             }
         }
@@ -116,7 +115,7 @@ Item {
 
             Repeater {
                 model: storyList.stories
-                delegate: storyDelegate
+                delegate: storyGroupDelegate
             }
         }
     }
@@ -163,12 +162,12 @@ Item {
         }
 
         onAppend: {
-            loader.source = "qrc:/qml/AppendDialog.qml"
+            appendLoader.source = "qrc:/qml/AppendDialog.qml"
         }
     }
 
     Loader {
-        id: loader
+        id: appendLoader
         onLoaded: {
            item.appendUrl.connect(root.appendUrl)
            item.appendFile.connect(root.appendFile)
@@ -181,6 +180,38 @@ Item {
             console.log("Main onRejected")
             item.close()
             source = ""
+        }
+    }      
+
+    Loader {
+        id: modifyLoader
+        property var story
+
+        onLoaded: {
+           item.removeStory.connect(onRemoveStory)
+           item.accepted.connect(onAccepted)
+           item.rejected.connect(onRejected)
+           item.story = modifyLoader.story
+           item.open()
+        }
+        
+        function onRemoveStory() {
+            console.log("onRemoveStory")
+            if (root.currentStory.id == uid) {
+                player.stop()
+            }
+            root.removeStory(uid)
+        }
+
+        function onRejected() {
+            console.log("Main onRejected")
+            item.close()
+            source = ""
+        }
+        
+        function onAccepted() {
+            console.log("Main onAccepted")
+            onRejected()
         }
     }      
         

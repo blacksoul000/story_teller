@@ -8,6 +8,7 @@
 namespace domain
 {
     class StoryGroup;
+    class StoryObject;
 
     class StoryDatabase : public QObject
     {
@@ -20,8 +21,11 @@ namespace domain
         bool isOpen() const;
 
         bool addStoryGroup(domain::StoryGroup* group);
+        bool updateStoryGroup(const domain::StoryGroup* group) const;
         bool removeStoryGroup(const QUuid& id);
+        bool updateStory(const domain::StoryObject* story) const;
         QList< domain::StoryGroup* > loadAll(bool* ok = nullptr) const;
+        bool loadStoryGroup(domain::StoryGroup* group) const;
 
     private:
         bool createTables();

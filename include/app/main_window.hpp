@@ -4,6 +4,11 @@
 #include <QObject>
 
 
+namespace domain
+{
+    class StoryGroup;
+}  //namespace domain
+
 namespace app
 {
     class MainWindow : public QObject

@@ -4,5 +4,6 @@
         <file>qml/Header.qml</file>
         <file>qml/Footer.qml</file>
         <file>qml/AppendDialog.qml</file>
+        <file>qml/ModifyDialog.qml</file>
     </qresource>
 </RCC>

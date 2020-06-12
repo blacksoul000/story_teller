@@ -11,6 +11,8 @@
 
 namespace domain
 {
+    class StoryDatabase;
+
     class StoryObject : public QObject
     {
         Q_OBJECT
@@ -19,12 +21,13 @@ namespace domain
         Q_PROPERTY(QUrl url READ url CONSTANT)
         Q_PROPERTY(double duration READ duration CONSTANT)
         Q_PROPERTY(QUrl preview READ preview CONSTANT)
+        Q_PROPERTY(bool isDeleted READ isDeleted WRITE setDeleted NOTIFY storyChanged)
 
     public:
-        StoryObject(const QString& tittle, const QUrl& url, double duration, 
-                    const QUrl& preview = QUrl(), const QUuid& id = QUuid::createUuid(), 
-                    QObject* parent = nullptr);
-        StoryObject(const MetaInfo metaInfo, QObject* parent = nullptr);
+        StoryObject(const StoryDatabase* db, const QString& tittle, const QUrl& url, double duration, 
+                    const QUrl& preview = QUrl(), bool isDeleted = false,
+                    const QUuid& id = QUuid::createUuid(), QObject* parent = nullptr);
+        StoryObject(const StoryDatabase* db, const MetaInfo metaInfo, QObject* parent = nullptr);
         ~StoryObject() override;
 
         QUuid id() const;
@@ -32,6 +35,12 @@ namespace domain
         QUrl preview() const;
         double duration() const;
         QUrl url() const;
+
+        bool isDeleted() const;
+        void setDeleted(bool set);
+
+    signals:
+        void storyChanged();
 
     private:
         struct Impl;
