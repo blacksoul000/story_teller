@@ -36,6 +36,7 @@ QString DetiOnlineHandler::parseTittle(const QString& buffer) const
         qDebug() << tittle;
         return tittle.trimmed();
     }
+    return QString();
 }
 
 QUrl DetiOnlineHandler::parsePreview(const QString& buffer) const
@@ -46,4 +47,5 @@ QUrl DetiOnlineHandler::parsePreview(const QString& buffer) const
     {
         return QUrl::fromUserInput("https://deti-online.com" + regexp.cap(1));
     }
+    return QUrl();
 }

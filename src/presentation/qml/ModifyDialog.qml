@@ -14,7 +14,6 @@ Dialog {
     property var story
 
     signal removeStory(string uid)
-    signal disableSample(string uid)
 
     contentItem: Rectangle {
         implicitWidth: Screen.width * 0.9
@@ -32,8 +31,8 @@ Dialog {
 
             RowLayout {
                 Image {
-                    width: 80
-                    height: 80
+                    sourceSize.width: 80
+                    sourceSize.height: 80
                     source: story.preview
                     fillMode: Image.PreserveAspectCrop
                 }
@@ -90,6 +89,18 @@ Dialog {
             Item {Layout.fillWidth : true}
 
             Button {
+                id: btnRemove
+                text: "Remove"
+                onClicked: {
+                    console.log("Dialog accepted")
+                    removeStory(story.id)
+                    dialog.accepted()
+                }
+            }
+
+            Item {Layout.fillWidth : true}
+
+            Button {
                 text: "Cancel"
                 onClicked: {
                     console.log("Dialog rejected")
@@ -102,7 +113,7 @@ Dialog {
 
     Component {
         id: storyDelegate
-            
+
         Rectangle {
             width: parent.width
             height: 40
@@ -121,7 +132,7 @@ Dialog {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-        
+
             MouseArea {
                 anchors.fill: parent
                 onClicked: {

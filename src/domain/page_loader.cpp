@@ -7,18 +7,17 @@
 using domain::PageLoader;
 
 
-PageLoader::PageLoader(QObject* parent): 
+PageLoader::PageLoader(QObject* parent):
     QObject(parent)
 {
-    qDebug() << Q_FUNC_INFO;
     connect(&m_qnam, &QNetworkAccessManager::authenticationRequired,
             this, &PageLoader::slotAuthenticationRequired);
 }
 
 void PageLoader::startRequest(const QUrl& url)
 {
-    qDebug() << Q_FUNC_INFO;
-    if (m_reply) 
+    qDebug() << Q_FUNC_INFO << url;
+    if (m_reply)
     {
         qDebug() << "Already busy";
         return;
@@ -49,14 +48,14 @@ void PageLoader::cancel()
 void PageLoader::httpFinished()
 {
     qDebug() << Q_FUNC_INFO;
-    if (m_httpRequestAborted) 
+    if (m_httpRequestAborted)
     {
         m_reply->deleteLater();
         m_reply = nullptr;
         return;
     }
 
-    if (m_reply->error()) 
+    if (m_reply->error())
     {
         m_reply->deleteLater();
         m_reply = nullptr;
@@ -94,7 +93,6 @@ QString PageLoader::tittle() const
 {
     return m_handler ? m_handler->parseTittle(m_buffer) : QString();
 }
-
 
 void PageLoader::slotAuthenticationRequired(QNetworkReply* ,QAuthenticator*)
 {}

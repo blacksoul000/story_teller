@@ -19,20 +19,15 @@
 #include <QDebug>
 #include <QDir>
 
-//Android
-#ifdef ANDROID
-#include <QtAndroid>
-#include <QAndroidJniObject>
-#endif
+////Android
+//#ifdef ANDROID
+//#include <QtAndroid>
+//#include <QAndroidJniObject>
+//#endif
 
 
 using app::MainWindow;
 using domain::PageLoader;
-
-
-namespace
-{
-}
 
 
 struct MainWindow::Impl
@@ -42,10 +37,10 @@ struct MainWindow::Impl
     domain::StoryList* storyList = nullptr;
     domain::StoryDatabase* db = nullptr;
 
-#ifdef ANDROID
-    QAndroidJniObject wakeLock;
-    bool wakeLocked = false;
-#endif
+//#ifdef ANDROID
+//    QAndroidJniObject wakeLock;
+//    bool wakeLocked = false;
+//#endif
 };
 
 MainWindow::MainWindow():
@@ -62,7 +57,7 @@ MainWindow::MainWindow():
     QString dbPath = path + "/story_teller.db";
 
     d->db = new domain::StoryDatabase(dbPath);
-    if (!d->db->isOpen()) 
+    if (!d->db->isOpen())
     {
         qApp->quit();
         return;
@@ -77,27 +72,27 @@ MainWindow::MainWindow():
     d->viewer->showFullScreen();
     d->viewer->requestActivate();
 
-#ifdef ANDROID
-    QAndroidJniObject activity = QtAndroid::androidActivity();
+//#ifdef ANDROID
+//    QAndroidJniObject activity = QtAndroid::androidActivity();
 
-    QAndroidJniObject serviceName = QAndroidJniObject::getStaticObjectField<jstring>(
-                "android/content/Context","POWER_SERVICE");
-    QAndroidJniObject powerMgr = activity.callObjectMethod("getSystemService",
-                                            "(Ljava/lang/String;)Ljava/lang/Object;",
-                                            serviceName.object<jobject>());
-    QAndroidJniObject tag = QAndroidJniObject::fromString("Robotank");
-    d->wakeLock = powerMgr.callObjectMethod("newWakeLock",
-                                        "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;",
-                                        6, //SCREEN_DIM_WAKE_LOCK
-                                        tag.object<jstring>());
-#endif
+//    QAndroidJniObject serviceName = QAndroidJniObject::getStaticObjectField<jstring>(
+//                "android/content/Context","POWER_SERVICE");
+//    QAndroidJniObject powerMgr = activity.callObjectMethod("getSystemService",
+//                                            "(Ljava/lang/String;)Ljava/lang/Object;",
+//                                            serviceName.object<jobject>());
+//    QAndroidJniObject tag = QAndroidJniObject::fromString("Robotank");
+//    d->wakeLock = powerMgr.callObjectMethod("newWakeLock",
+//                                        "(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;",
+//                                        6, //SCREEN_DIM_WAKE_LOCK
+//                                        tag.object<jstring>());
+//#endif
 
     connect(d->viewer->engine(), &QQmlEngine::quit, qApp, &QCoreApplication::quit);
-    connect(d->viewer->rootObject(), SIGNAL(appendFile(const QString&, const QString&, const QString&)), 
+    connect(d->viewer->rootObject(), SIGNAL(appendFile(const QString&, const QString&, const QString&)),
         this, SLOT(onAppendFile(const QString&, const QString&, const QString&)));
-    connect(d->viewer->rootObject(), SIGNAL(appendUrl(const QString&)), 
+    connect(d->viewer->rootObject(), SIGNAL(appendUrl(const QString&)),
         this, SLOT(onAppendUrl(const QString&)));
-    connect(d->viewer->rootObject(), SIGNAL(removeStory(const QString&)), 
+    connect(d->viewer->rootObject(), SIGNAL(removeStory(const QString&)),
         this, SLOT(onRemoveStory(const QString&)));
 
     bool ok;
@@ -122,6 +117,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::onPageLoaded()
 {
+    qDebug() << Q_FUNC_INFO;
     domain::StoryGroup* group = new domain::StoryGroup(d->db, d->pageLoader->tittle(), d->pageLoader->preview());
 
     for (const auto& media: d->pageLoader->media())
@@ -157,7 +153,6 @@ void MainWindow::onAppendFile(const QString& url, const QString& tittle, const Q
 
 void MainWindow::onAppendUrl(const QString& url)
 {
-    qDebug() << Q_FUNC_INFO << url;
     if (d->pageLoader)
     {
         qDebug() << "Busy";
@@ -167,13 +162,6 @@ void MainWindow::onAppendUrl(const QString& url)
     QUrl storyUrl = QUrl::fromUserInput(url);
     qDebug() << Q_FUNC_INFO << storyUrl;
     d->pageLoader = new PageLoader(this);
-    d->pageLoader->startRequest(storyUrl);
-    if (!d->pageLoader)
-    {
-        // TODO - show error
-        qDebug() << "Failed to parse url";
-        return;
-    }
     connect(d->pageLoader, &PageLoader::finished, this, &MainWindow::onPageLoaded);
     d->pageLoader->startRequest(storyUrl);
 }

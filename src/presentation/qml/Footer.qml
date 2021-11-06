@@ -5,9 +5,9 @@ import QtMultimedia 5.9
 
 import vitaliy.bondar.storyteller 1.0
 
-RowLayout {
+ColumnLayout {
     id: root
-    height: 60
+    height: 100
     Layout.fillWidth : true
 
     property var currentStory
@@ -33,150 +33,171 @@ RowLayout {
     signal pause()
     signal stop()
     signal append()
+    signal seek(int pos)
 
-    ColumnLayout {
-        spacing: 5
-        Text {
-            font.pointSize: 16
-            text: root.currentSample ? msecToTime(position) : "--:--"
-        }
-        Text {
-            font.pointSize: 16
-            text: root.currentSample ? msecToTime(duration) : "--:--"
-        }
-    }
+    Slider {
+        id: slider
 
-    Item {Layout.fillWidth : true}
+        Layout.fillWidth: true
+        enabled: root.currentSample != null
 
-    ToolButton {
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: root.storyPart > 0
-        visible: !root.locked
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/backward.svg"
-        }               
-        onClicked: root.backward()
-    }
+        from: 0
+        to: root.currentSample ? duration : 0
 
-    ToolButton {
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: root.locked
-        visible: root.locked
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/plus.svg"
-        }            
-        onClicked: root.append()
-    }
-
-    Item {Layout.fillWidth : true}
-
-    ToolButton {
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: (root.currentSample != undefined)
-        visible: !root.locked
-        Image {
-            anchors.fill: parent
-            source: root.playbackState == Audio.PlayingState ? "qrc:/icons/pause.svg" : "qrc:/icons/play.svg"
-        }
-        onClicked: {
-            root.playbackState == Audio.PlayingState ? root.pause() : root.play()
+        onMoved: {
+            seek(value)
         }
     }
 
-    ToolButton {
-        id: repeat
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: root.locked
-        visible: root.locked
-
-        property int mode: repeatNone
-
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/repeat.svg"
+    RowLayout {
+        ColumnLayout {
+            spacing: 5
             Text {
-                anchors {
-                    right: parent.right
-                    bottom: parent.bottom
-                }
-                text: {
-                    if (repeat.mode == repeatNone) return "Off"
-                    if (repeat.mode == repeatOne) return "1"
-                    if (repeat.mode == repeatAll) return "All"
-                }
+                font.pointSize: 16
+                text: root.currentSample ? msecToTime(position) : "--:--"
             }
-        }  
-        onClicked: {
-            if (mode == repeatAll) mode = repeatNone
-            else ++mode;
-        }
-    }
-
-    Item {Layout.fillWidth : true}
-
-    ToolButton {
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: (root.currentStory != undefined && root.storyPart < root.currentStory.stories.length - 1)
-        visible: !root.locked
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/forward.svg"
-        }
-        onClicked: root.forward()
-    }
-
-    ToolButton {
-        id: timerBtn
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        enabled: root.locked
-        visible: root.locked
-        property int timeoutMin: 0
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/timer.svg"
-
             Text {
-                anchors {
-                    right: parent.right
-                    bottom: parent.bottom
+                font.pointSize: 16
+                text: root.currentSample ? msecToTime(duration) : "--:--"
+            }
+        }
+
+        Item {Layout.fillWidth : true}
+
+        ToolButton {
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: root.storyPart > 0
+            visible: !root.locked
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/backward.svg"
+            }
+            onClicked: root.backward()
+        }
+
+        ToolButton {
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: root.locked
+            visible: root.locked
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/plus.svg"
+            }
+            onClicked: root.append()
+        }
+
+        Item {Layout.fillWidth : true}
+
+        ToolButton {
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: (root.currentSample != undefined)
+            visible: !root.locked
+            Image {
+                anchors.fill: parent
+                source: root.playbackState == Audio.PlayingState ? "qrc:/icons/pause.svg" : "qrc:/icons/play.svg"
+            }
+            onClicked: {
+                root.playbackState == Audio.PlayingState ? root.pause() : root.play()
+            }
+        }
+
+        ToolButton {
+            id: repeat
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: root.locked
+            visible: root.locked
+
+            property int mode: repeatNone
+
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/repeat.svg"
+                Text {
+                    anchors {
+                        right: parent.right
+                        bottom: parent.bottom
+                    }
+                    text: {
+                        if (repeat.mode == repeatNone) return "Off"
+                        if (repeat.mode == repeatOne) return "1"
+                        if (repeat.mode == repeatAll) return "All"
+                    }
                 }
-                text: timerBtn.timeoutMin == 0 ? "Off" : "" + timerBtn.timeoutMin
+            }
+            onClicked: {
+                if (mode == repeatAll) mode = repeatNone
+                else ++mode;
             }
         }
-        Timer {
-            interval: 60000
-            running: timerBtn.timeoutMin > 0
-            repeat: true
-            onTriggered: {
-                --timerBtn.timeoutMin
-                if (timerBtn.timeoutMin == 0) root.stop()
+
+        Item {Layout.fillWidth : true}
+
+        ToolButton {
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: (root.currentStory != undefined && root.storyPart < root.currentStory.stories.length - 1)
+            visible: !root.locked
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/forward.svg"
+            }
+            onClicked: root.forward()
+        }
+
+        ToolButton {
+            id: timerBtn
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            enabled: root.locked
+            visible: root.locked
+            property int timeoutMin: 0
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/timer.svg"
+
+                Text {
+                    anchors {
+                        right: parent.right
+                        bottom: parent.bottom
+                    }
+                    text: timerBtn.timeoutMin == 0 ? "Off" : "" + timerBtn.timeoutMin
+                }
+            }
+            Timer {
+                interval: 60000
+                running: timerBtn.timeoutMin > 0
+                repeat: true
+                onTriggered: {
+                    --timerBtn.timeoutMin
+                    if (timerBtn.timeoutMin == 0) root.stop()
+                }
+            }
+            onClicked: {
+                timerBtn.timeoutMin = (timerBtn.timeoutMin + 15 - timerBtn.timeoutMin % 15)
+                if (timerBtn.timeoutMin == root.maxTimeoutMin) timerBtn.timeoutMin = 0
             }
         }
-        onClicked: {
-            timerBtn.timeoutMin = (timerBtn.timeoutMin + 15 - timerBtn.timeoutMin % 15)
-            if (timerBtn.timeoutMin == root.maxTimeoutMin) timerBtn.timeoutMin = 0
+
+        Item {Layout.fillWidth : true}
+
+        DelayButton {
+            id: lock
+            implicitHeight: 60
+            implicitWidth: implicitHeight
+            delay: 1000
+            Image {
+                anchors.fill: parent
+                source: "qrc:/icons/locked.svg"
+            }
         }
     }
 
-    Item {Layout.fillWidth : true}
-
-    DelayButton {
-        id: lock
-        implicitHeight: footer.height
-        implicitWidth: implicitHeight
-        delay: 1000
-        Image {
-            anchors.fill: parent
-            source: "qrc:/icons/locked.svg"
-        }                 
+    onPositionChanged: {
+        slider.value = position
     }
 
     function msecToTime(msec) {

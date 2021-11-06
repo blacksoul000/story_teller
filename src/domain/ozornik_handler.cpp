@@ -38,6 +38,7 @@ QString OzornikHandler::parseTittle(const QString& buffer) const
     {
         return regexp.cap(2);
     }
+    return QString();
 }
 
 QUrl OzornikHandler::parsePreview(const QString& buffer) const
@@ -48,4 +49,5 @@ QUrl OzornikHandler::parsePreview(const QString& buffer) const
     {
         return regexp.cap(1);
     }
+    return QUrl();
 }

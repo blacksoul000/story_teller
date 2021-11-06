@@ -3,14 +3,14 @@ import QtQuick.Controls 2.2
 import QtQuick.Window 2.0
 import QtQuick.Layouts 1.3
 import QtMultimedia 5.9
-            
+
 import vitaliy.bondar.storyteller 1.0
-        
+
 Item {
     id: root
     width: Screen.width
     height: Screen.height
-                
+
     property int numCols: 5
     property int itemHeight: (Screen.width - 2 * margins - (numCols - 1) * grid.columnSpacing) / numCols
     property int itemWidth: itemHeight
@@ -19,16 +19,16 @@ Item {
     property var currentStory
     property var currentSample
     property int storyPart: 0
-            
+
     property bool controlsEnabled: footer.locked
-    
+
     signal appendFile(string storyUrl, string tittle, string preview)
     signal appendUrl(string storyUrl)
     signal removeStory(string uid)
-        
+
     Component {
         id: storyGroupDelegate
-            
+
         Item {
             width: root.itemWidth
             height: root.itemHeight
@@ -46,7 +46,7 @@ Item {
                     source: modelData.preview
                     fillMode: Image.PreserveAspectCrop
                 }
-            
+
                 SequentialAnimation on scale {
                     running: (root.currentStory == modelData)
                     loops: Animation.Infinite
@@ -55,7 +55,7 @@ Item {
                     onRunningChanged: if (!running) itemRect.scale = 1.0
                 }
             }
-        
+
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
@@ -164,6 +164,10 @@ Item {
         onAppend: {
             appendLoader.source = "qrc:/qml/AppendDialog.qml"
         }
+
+        onSeek: {
+            player.seek(pos)
+        }
     }
 
     Loader {
@@ -175,13 +179,13 @@ Item {
            item.rejected.connect(onRejected)
            item.open()
         }
-        
+
         function onRejected() {
             console.log("Main onRejected")
             item.close()
             source = ""
         }
-    }      
+    }
 
     Loader {
         id: modifyLoader
@@ -194,10 +198,10 @@ Item {
            item.story = modifyLoader.story
            item.open()
         }
-        
-        function onRemoveStory() {
+
+        function onRemoveStory(uid) {
             console.log("onRemoveStory")
-            if (root.currentStory.id == uid) {
+            if (root.currentStory && root.currentStory.id == uid) {
                 player.stop()
             }
             root.removeStory(uid)
@@ -208,13 +212,13 @@ Item {
             item.close()
             source = ""
         }
-        
+
         function onAccepted() {
             console.log("Main onAccepted")
             onRejected()
         }
-    }      
-        
+    }
+
     Audio {
         id: player
         autoLoad: true
@@ -246,7 +250,7 @@ Item {
             }
         }
     }
-            
+
     onCurrentStoryChanged: {
         root.storyPart = 0
         if (!root.currentStory) {
